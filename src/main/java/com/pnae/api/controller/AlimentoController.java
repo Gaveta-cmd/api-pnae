@@ -4,6 +4,8 @@ import com.pnae.application.dto.AlimentoRequestDTO;
 import com.pnae.application.dto.AlimentoResponseDTO;
 import com.pnae.application.service.AlimentoService;
 import com.pnae.domain.model.CategoriaAlimento;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +26,8 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/alimentos")
 @RequiredArgsConstructor
+@Tag(name = "Alimentos", description = "Cadastro de alimentos")
+@SecurityRequirement(name = "bearerAuth")
 public class AlimentoController {
 
     private final AlimentoService alimentoService;

@@ -6,6 +6,8 @@ import com.pnae.application.dto.EstoqueMovimentacaoDTO;
 import com.pnae.application.dto.MovimentacaoResponseDTO;
 import com.pnae.application.service.EstoqueService;
 import com.pnae.domain.model.Usuario;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -24,6 +26,8 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/estoque")
 @RequiredArgsConstructor
+@Tag(name = "Estoque", description = "Controle de estoque")
+@SecurityRequirement(name = "bearerAuth")
 public class EstoqueController {
 
     private final EstoqueService estoqueService;

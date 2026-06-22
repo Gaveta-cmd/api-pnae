@@ -7,6 +7,7 @@ import com.pnae.application.dto.UsuarioResponseDTO;
 import com.pnae.application.service.UsuarioService;
 import com.pnae.domain.model.Usuario;
 import com.pnae.infrastructure.config.JwtService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
+@Tag(name = "Autenticação", description = "Login e registro de usuários")
 public class AuthController {
 
     private final AuthenticationManager authenticationManager;

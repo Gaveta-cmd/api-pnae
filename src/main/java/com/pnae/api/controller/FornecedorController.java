@@ -3,6 +3,8 @@ package com.pnae.api.controller;
 import com.pnae.application.dto.FornecedorRequestDTO;
 import com.pnae.application.dto.FornecedorResponseDTO;
 import com.pnae.application.service.FornecedorService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +25,8 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/fornecedores")
 @RequiredArgsConstructor
+@Tag(name = "Fornecedores", description = "Cadastro de fornecedores")
+@SecurityRequirement(name = "bearerAuth")
 public class FornecedorController {
 
     private final FornecedorService fornecedorService;

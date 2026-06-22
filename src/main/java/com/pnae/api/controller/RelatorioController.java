@@ -6,6 +6,8 @@ import com.pnae.application.dto.RelatorioEscolasDTO;
 import com.pnae.application.dto.RelatorioEstoqueDTO;
 import com.pnae.application.dto.RelatorioNutricionalDTO;
 import com.pnae.application.service.RelatorioService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,6 +19,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/relatorios")
 @RequiredArgsConstructor
+@Tag(name = "Relatórios", description = "Relatórios gerenciais")
+@SecurityRequirement(name = "bearerAuth")
 public class RelatorioController {
 
     private final RelatorioService relatorioService;

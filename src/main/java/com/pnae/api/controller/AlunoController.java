@@ -3,6 +3,8 @@ package com.pnae.api.controller;
 import com.pnae.application.dto.AlunoRequestDTO;
 import com.pnae.application.dto.AlunoResponseDTO;
 import com.pnae.application.service.AlunoService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +25,8 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/alunos")
 @RequiredArgsConstructor
+@Tag(name = "Alunos", description = "Gestão de alunos")
+@SecurityRequirement(name = "bearerAuth")
 public class AlunoController {
 
     private final AlunoService alunoService;
