@@ -9,6 +9,8 @@ import com.pnae.domain.model.Escola;
 import com.pnae.domain.repository.AlunoRepository;
 import com.pnae.domain.repository.EscolaRepository;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +19,8 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class AlunoService {
+
+    private static final Logger log = LoggerFactory.getLogger(AlunoService.class);
 
     private final AlunoRepository alunoRepository;
     private final EscolaRepository escolaRepository;
@@ -69,7 +73,9 @@ public class AlunoService {
                 .escola(escola)
                 .build();
 
-        return AlunoResponseDTO.from(alunoRepository.save(aluno));
+        AlunoResponseDTO criado = AlunoResponseDTO.from(alunoRepository.save(aluno));
+        log.info("Aluno matriculado: id={}, nome={}, escola={}", criado.id(), criado.nome(), escola.getNome());
+        return criado;
     }
 
     @Transactional
@@ -103,6 +109,7 @@ public class AlunoService {
                 .orElseThrow(() -> new ResourceNotFoundException("Aluno", id));
         aluno.setAtivo(false);
         alunoRepository.save(aluno);
+        log.info("Aluno desativado: id={}, nome={}", id, aluno.getNome());
     }
 
     private Escola buscarEscolaValida(Long escolaId) {

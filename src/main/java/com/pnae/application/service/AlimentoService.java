@@ -7,6 +7,8 @@ import com.pnae.domain.model.Alimento;
 import com.pnae.domain.model.CategoriaAlimento;
 import com.pnae.domain.repository.AlimentoRepository;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,6 +17,8 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class AlimentoService {
+
+    private static final Logger log = LoggerFactory.getLogger(AlimentoService.class);
 
     private final AlimentoRepository alimentoRepository;
 
@@ -56,7 +60,9 @@ public class AlimentoService {
     @Transactional
     public AlimentoResponseDTO criar(AlimentoRequestDTO dto) {
         Alimento alimento = toEntity(dto, new Alimento());
-        return AlimentoResponseDTO.from(alimentoRepository.save(alimento));
+        AlimentoResponseDTO criado = AlimentoResponseDTO.from(alimentoRepository.save(alimento));
+        log.info("Alimento criado: id={}, nome={}", criado.id(), criado.nome());
+        return criado;
     }
 
     @Transactional
@@ -72,6 +78,7 @@ public class AlimentoService {
                 .orElseThrow(() -> new ResourceNotFoundException("Alimento", id));
         alimento.setAtivo(false);
         alimentoRepository.save(alimento);
+        log.info("Alimento desativado: id={}, nome={}", id, alimento.getNome());
     }
 
     private Alimento toEntity(AlimentoRequestDTO dto, Alimento alimento) {

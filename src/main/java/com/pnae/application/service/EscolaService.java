@@ -7,6 +7,8 @@ import com.pnae.domain.model.Endereco;
 import com.pnae.domain.model.Escola;
 import com.pnae.domain.repository.EscolaRepository;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,6 +17,8 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class EscolaService {
+
+    private static final Logger log = LoggerFactory.getLogger(EscolaService.class);
 
     private final EscolaRepository escolaRepository;
 
@@ -54,7 +58,9 @@ public class EscolaService {
                 .tipo(dto.tipo())
                 .capacidadeAlunos(dto.capacidadeAlunos())
                 .build();
-        return EscolaResponseDTO.from(escolaRepository.save(escola));
+        EscolaResponseDTO criada = EscolaResponseDTO.from(escolaRepository.save(escola));
+        log.info("Escola criada: id={}, nome={}", criada.id(), criada.nome());
+        return criada;
     }
 
     @Transactional
@@ -67,7 +73,9 @@ public class EscolaService {
         escola.setTipo(dto.tipo());
         escola.setCapacidadeAlunos(dto.capacidadeAlunos());
 
-        return EscolaResponseDTO.from(escolaRepository.save(escola));
+        EscolaResponseDTO atualizada = EscolaResponseDTO.from(escolaRepository.save(escola));
+        log.info("Escola atualizada: id={}, nome={}", atualizada.id(), atualizada.nome());
+        return atualizada;
     }
 
     @Transactional
@@ -76,6 +84,7 @@ public class EscolaService {
                 .orElseThrow(() -> new ResourceNotFoundException("Escola", id));
         escola.setAtiva(false);
         escolaRepository.save(escola);
+        log.info("Escola desativada: id={}, nome={}", id, escola.getNome());
     }
 
     private Endereco toEndereco(EscolaRequestDTO dto) {
