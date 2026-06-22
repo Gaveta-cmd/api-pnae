@@ -1,0 +1,70 @@
+spring:
+  application:
+    name: api-pnae
+
+  profiles:
+    active: dev
+
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+  datasource:
+    url: jdbc:sqlserver://localhost:1433;databaseName=pnae_db;encrypt=false;trustServerCertificate=true
+    username: sa
+    password: Pnae@2024!
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.SQLServerDialect
+        format_sql: true
+
+server:
+  port: 8080
+
+logging:
+  level:
+    com.pnae: DEBUG
+    org.springframework.web: INFO
+
+---
+spring:
+  config:
+    activate:
+      on-profile: test
+
+  datasource:
+    url: jdbc:sqlserver://localhost:1433;databaseName=pnae_db_test;encrypt=false;trustServerCertificate=true
+    username: sa
+    password: Pnae@2024!
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+  datasource:
+    url: ${DATABASE_URL}
+    username: ${DATABASE_USER}
+    password: ${DATABASE_PASSWORD}
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+
+logging:
+  level:
+    com.pnae: INFO
