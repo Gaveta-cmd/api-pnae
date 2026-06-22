@@ -21,6 +21,8 @@ import com.pnae.domain.repository.EscolaRepository;
 import com.pnae.domain.repository.ItemCardapioRepository;
 import com.pnae.domain.service.ValidacaoNutricionalService;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +33,8 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 public class CardapioService {
+
+    private static final Logger log = LoggerFactory.getLogger(CardapioService.class);
 
     private final CardapioRepository cardapioRepository;
     private final ItemCardapioRepository itemCardapioRepository;
@@ -56,7 +60,9 @@ public class CardapioService {
                 .ano(dto.ano())
                 .observacoes(dto.observacoes())
                 .build();
-        return CardapioResponseDTO.from(cardapioRepository.save(cardapio));
+        CardapioResponseDTO criado = CardapioResponseDTO.from(cardapioRepository.save(cardapio));
+        log.info("Cardápio criado: id={}, escola={}, semana={}/{}", criado.id(), escola.getNome(), dto.semana(), dto.ano());
+        return criado;
     }
 
     @Transactional(readOnly = true)
@@ -180,7 +186,9 @@ public class CardapioService {
             throw new BusinessException("Somente cardápios VALIDADOS podem ser aprovados. Status atual: " + cardapio.getStatus());
         }
         cardapio.setStatus(StatusCardapio.APROVADO);
-        return CardapioResponseDTO.from(cardapioRepository.save(cardapio));
+        CardapioResponseDTO aprovado = CardapioResponseDTO.from(cardapioRepository.save(cardapio));
+        log.info("Cardápio aprovado: id={}", id);
+        return aprovado;
     }
 
     @Transactional
