@@ -5,23 +5,28 @@ import com.pnae.application.dto.CardapioResponseDTO;
 import com.pnae.application.dto.ItemCardapioRequestDTO;
 import com.pnae.application.dto.ItemCardapioResponseDTO;
 import com.pnae.application.dto.ResumoNutricionalDTO;
+import com.pnae.application.dto.ValidacaoNutricionalDTO;
 import com.pnae.domain.exception.BusinessException;
 import com.pnae.domain.exception.ResourceNotFoundException;
 import com.pnae.domain.model.Alimento;
 import com.pnae.domain.model.Cardapio;
 import com.pnae.domain.model.DiaSemana;
 import com.pnae.domain.model.Escola;
+import com.pnae.domain.model.FaixaEtaria;
 import com.pnae.domain.model.ItemCardapio;
 import com.pnae.domain.model.StatusCardapio;
 import com.pnae.domain.repository.AlimentoRepository;
 import com.pnae.domain.repository.CardapioRepository;
 import com.pnae.domain.repository.EscolaRepository;
 import com.pnae.domain.repository.ItemCardapioRepository;
+import com.pnae.domain.service.ValidacaoNutricionalService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -31,6 +36,7 @@ public class CardapioService {
     private final ItemCardapioRepository itemCardapioRepository;
     private final EscolaRepository escolaRepository;
     private final AlimentoRepository alimentoRepository;
+    private final @Lazy ValidacaoNutricionalService validacaoNutricionalService;
 
     @Transactional
     public CardapioResponseDTO criarCardapio(CardapioRequestDTO dto) {
@@ -79,8 +85,8 @@ public class CardapioService {
     @Transactional
     public ItemCardapioResponseDTO adicionarItem(Long cardapioId, ItemCardapioRequestDTO dto) {
         Cardapio cardapio = buscarCardapio(cardapioId);
-        if (cardapio.getStatus() != StatusCardapio.RASCUNHO) {
-            throw new BusinessException("Somente cardápios em RASCUNHO podem ter itens adicionados");
+        if (cardapio.getStatus() == StatusCardapio.APROVADO) {
+            throw new BusinessException("Não é possível editar um cardápio já APROVADO");
         }
         Alimento alimento = alimentoRepository.findById(dto.alimentoId())
                 .orElseThrow(() -> new ResourceNotFoundException("Alimento", dto.alimentoId()));
@@ -100,8 +106,8 @@ public class CardapioService {
     @Transactional
     public void removerItem(Long cardapioId, Long itemId) {
         Cardapio cardapio = buscarCardapio(cardapioId);
-        if (cardapio.getStatus() != StatusCardapio.RASCUNHO) {
-            throw new BusinessException("Somente cardápios em RASCUNHO podem ter itens removidos");
+        if (cardapio.getStatus() == StatusCardapio.APROVADO) {
+            throw new BusinessException("Não é possível editar um cardápio já APROVADO");
         }
         ItemCardapio item = itemCardapioRepository.findById(itemId)
                 .orElseThrow(() -> new ResourceNotFoundException("Item de cardápio", itemId));
@@ -123,6 +129,66 @@ public class CardapioService {
                 .filter(i -> i.getDiaSemana() == dia)
                 .toList();
         return ResumoNutricionalDTO.from(dia, itensDia);
+    }
+
+    @Transactional
+    public Map<FaixaEtaria, List<ValidacaoNutricionalDTO>> validarParaFaixa(Long id, FaixaEtaria faixa) {
+        Cardapio cardapio = buscarCardapio(id);
+        List<ValidacaoNutricionalDTO> resultado = validacaoNutricionalService.validarCardapioCompleto(id, faixa);
+        boolean aprovado = resultado.stream().allMatch(ValidacaoNutricionalDTO::aprovado);
+        cardapio.setStatus(aprovado ? StatusCardapio.VALIDADO : StatusCardapio.REJEITADO);
+        if (!aprovado) {
+            String alertas = resultado.stream()
+                    .filter(v -> !v.aprovado())
+                    .flatMap(v -> v.alertas().stream())
+                    .distinct()
+                    .reduce("", (a, b) -> a + "- " + b + "\n");
+            String obs = "Validação para " + faixa.getDescricao() + " falhou:\n" + alertas;
+            cardapio.setObservacoes(obs.length() > 997 ? obs.substring(0, 997) + "..." : obs);
+        }
+        cardapioRepository.save(cardapio);
+        return Map.of(faixa, resultado);
+    }
+
+    @Transactional
+    public Map<FaixaEtaria, List<ValidacaoNutricionalDTO>> validarParaEscola(Long id) {
+        Cardapio cardapio = buscarCardapio(id);
+        Map<FaixaEtaria, List<ValidacaoNutricionalDTO>> resultado =
+                validacaoNutricionalService.validarCardapioParaEscola(id);
+        boolean aprovado = resultado.values().stream()
+                .flatMap(List::stream)
+                .allMatch(ValidacaoNutricionalDTO::aprovado);
+        cardapio.setStatus(aprovado ? StatusCardapio.VALIDADO : StatusCardapio.REJEITADO);
+        if (!aprovado) {
+            String alertas = resultado.values().stream()
+                    .flatMap(List::stream)
+                    .filter(v -> !v.aprovado())
+                    .flatMap(v -> v.alertas().stream())
+                    .distinct()
+                    .reduce("", (a, b) -> a + "- " + b + "\n");
+            String obs = "Validação para escola falhou:\n" + alertas;
+            cardapio.setObservacoes(obs.length() > 997 ? obs.substring(0, 997) + "..." : obs);
+        }
+        cardapioRepository.save(cardapio);
+        return resultado;
+    }
+
+    @Transactional
+    public CardapioResponseDTO aprovarCardapio(Long id) {
+        Cardapio cardapio = buscarCardapio(id);
+        if (cardapio.getStatus() != StatusCardapio.VALIDADO) {
+            throw new BusinessException("Somente cardápios VALIDADOS podem ser aprovados. Status atual: " + cardapio.getStatus());
+        }
+        cardapio.setStatus(StatusCardapio.APROVADO);
+        return CardapioResponseDTO.from(cardapioRepository.save(cardapio));
+    }
+
+    @Transactional
+    public CardapioResponseDTO rejeitarCardapio(Long id, String motivo) {
+        Cardapio cardapio = buscarCardapio(id);
+        cardapio.setStatus(StatusCardapio.REJEITADO);
+        cardapio.setObservacoes(motivo);
+        return CardapioResponseDTO.from(cardapioRepository.save(cardapio));
     }
 
     public Cardapio buscarCardapio(Long id) {
