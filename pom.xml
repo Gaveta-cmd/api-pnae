@@ -13,7 +13,7 @@
 
     <groupId>com.pnae</groupId>
     <artifactId>api-pnae</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0.0</version>
     <name>api-pnae</name>
     <description>API REST para gestão de alimentação escolar (PNAE)</description>
 
